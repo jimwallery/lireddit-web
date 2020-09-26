@@ -3,11 +3,12 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 
 export const useIsAuth = () => {
-  const [{ data, fetching }] = useMeQuery();
+  //for Apollo remove array [] and fetching to loading lines 7,10,13
+  const { data, loading } = useMeQuery();
   const router = useRouter();
   useEffect(() => {
-    if (!fetching && !data?.me) {
+    if (!loading && !data?.me) {
       router.replace('/login?next=' + router.pathname);
     }
-  }, [fetching, data, router]);
+  }, [loading, data, router]);
 };

@@ -8,9 +8,10 @@ import { EditDeletePostButtons } from '../../components/EditDeletePostButtons';
 import { withApollo } from '../../utils/withApollo';
 
 const Post = ({}) => {
-  const [{ data, error, fetching }] = useGetPostFromUrl();
+  //remove array []change fetching to loading
+  const { data, error, loading } = useGetPostFromUrl();
 
-  if (fetching) {
+  if (loading) {
     return (
       <Layout>
         <div>loading...</div>
@@ -42,4 +43,5 @@ const Post = ({}) => {
   );
 };
 
-export default withUrqlClient(createUrqlClient, { ssr: true })(Post);
+//export default withUrqlClient(createUrqlClient, { ssr: true })(Post);
+export default withApollo({ ssr: true })(Post);

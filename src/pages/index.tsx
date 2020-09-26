@@ -1,27 +1,30 @@
 import { Box, Button, Flex, Heading, Link, Stack, Text } from '@chakra-ui/core';
-import { withUrqlClient } from 'next-urql';
 import NextLink from 'next/link';
-import { useState } from 'react';
 import { EditDeletePostButtons } from '../components/EditDeletePostButtons';
 import { Layout } from '../components/Layout';
 import { UpdootSection } from '../components/UpdootSection';
 import { usePostsQuery } from '../generated/graphql';
-import { createUrqlClient } from '../utils/createUrqlClient';
+import { withApollo } from '../utils/withApollo';
 
 const Index = () => {
-  const [variables, setVariables] = useState({
-    limit: 15,
-    cursor: null as null | string,
-  });
-
-  const [{ data, error, fetching }] = usePostsQuery({
-    variables,
+  // const [variables, setVariables] = useState({
+  //   // limit: 15,
+  //   // cursor: null as null | string,
+  // });
+  //removed array around the const for Apollo and fetching is called loading
+  //also some changes above and now variables, changes moved from above and added fetchMore
+  const { data, error, loading, fetchMore, variables } = usePostsQuery({
+    variables: {
+      limit: 15,
+      cursor: null,
+    },
+    notifyOnNetworkStatusChange: true,
   });
 
   //const [, deletePost] = useDeletePostMutation({});
-  console.log(variables);
+  //console.log(variables);
 
-  if (!fetching && !data) {
+  if (!loading && !data) {
     return (
       <div>
         <div>you got query failed for some reason</div>
@@ -32,7 +35,7 @@ const Index = () => {
 
   return (
     <Layout>
-      {fetching && !data ? (
+      {loading && !data ? (
         <div>loading...</div>
       ) : (
         <Stack spacing={8}>
@@ -69,12 +72,40 @@ const Index = () => {
         <Flex>
           <Button
             onClick={() => {
-              setVariables({
-                limit: variables.limit,
-                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
+              //With Apollo added fetchMore and variables and limit: variables add ? cuz undefined sometimes
+              fetchMore({
+                variables: {
+                  limit: variables?.limit,
+                  cursor:
+                    data.posts.posts[data.posts.posts.length - 1].createdAt,
+                },
+                //With Apollo using the Apollo Merge Function we comment out
+                // updateQuery: (
+                //   previousValue,
+                //   { fetchMoreResult }
+                // ): PostsQuery => {
+                //   if (!fetchMoreResult) {
+                //     return previousValue as PostsQuery;
+                //   }
+                //   return {
+                //     __typename: 'Query',
+                //     posts: {
+                //       __typename: 'PaginatedPosts',
+                //       hasMore: (fetchMoreResult as PostsQuery).posts.hasMore,
+                //       posts: [
+                //         ...(previousValue as PostsQuery).posts.posts,
+                //         ...(fetchMoreResult as PostsQuery).posts.posts,
+                //       ],
+                //     },
+                //   };
+                // },
               });
+              // setVariables({
+              //   limit: variables.limit,
+              //   cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
+              // });
             }}
-            isLoading={fetching}
+            isLoading={loading}
             m="auto"
             my={8}
           >
@@ -85,4 +116,5 @@ const Index = () => {
     </Layout>
   );
 };
-export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+//export default withUrqlClient(createUrqlClient, { ssr: true })(Index);
+export default withApollo({ ssr: true })(Index);
